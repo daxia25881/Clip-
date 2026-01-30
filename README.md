@@ -14,8 +14,8 @@
 
 | 端 | 项目 | 说明 |
 |:--:|------|------|
-| � iOS | **Clip 魔改版**（本项目） | 剪贴板监控 + 云同步客户端 |
-| � PC | [HuChuan](https://github.com/daxia25881/huchuan) | Windows/macOS 剪贴板同步工具 |
+| iOS | **Clip 魔改版**（本项目） | 剪贴板监控 + 云同步客户端 |
+| PC | [HuChuan](https://github.com/daxia25881/huchuan) | Windows/macOS 剪贴板同步工具 |
 
 ---
 
@@ -173,7 +173,19 @@ chmod +x package_ipa.sh
 - **TrollStore**：直接安装打包好的 IPA
 - **AltStore**：侧载安装（需每 7 天重签）
 
-### 4. 部署 PC 端
+### 4. 注入保活插件（推荐）
+
+为确保 Clip 在后台长期稳定运行，建议使用 [TrollFools](https://github.com/Lessica/TrollFools) 注入 [ImmortalizerJailed](https://github.com/axs66/ImmortalizerJailed) 保活插件：
+
+1. 安装 **TrollFools**（需 TrollStore 环境）
+2. 下载 [ImmortalizerJailed.dylib](https://github.com/axs66/ImmortalizerJailed/releases)
+3. 打开 TrollFools，选择 **Clip** 应用
+4. 注入 `ImmortalizerJailed.dylib`
+5. 重启 Clip 即可生效
+
+> ⚠️ **注意**：注入后 Clip 将获得更强的后台保活能力，可有效防止系统杀死进程。
+
+### 5. 部署 PC 端
 
 参考 [HuChuan 项目](https://github.com/daxia25881/huchuan) 部署 PC 端同步工具。
 
