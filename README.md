@@ -137,12 +137,27 @@ PC 复制内容
 | 配置项 | 说明 |
 |--------|------|
 | **Target Path** | CopyLog 剪贴板文件的存储路径 |
-| **Bark Path** | Bark API 地址，用于接收同步触发通知 |
+| **Bark Path** | Bark 的 pending_messages 文件夹路径 |
 | **WebDAV URL** | WebDAV 服务器地址 |
 | **WebDAV Username** | WebDAV 账号 |
 | **WebDAV Password** | WebDAV 密码 |
 | **剪贴板通知** | 是否显示剪贴板变化通知 |
 | **云同步通知** | 是否显示云同步结果通知 |
+
+### 配置示例
+
+```
+Target Path:      /var/mobile/Containers/Data/Application/xxxxxxxx/Library/CopyLog/Snippets
+Bark Path:        /var/mobile/Containers/Shared/AppGroup/xxxxxxxx/pending_messages
+WebDAV URL:       https://your-webdav-server.com/dav/SyncClipboard.json
+WebDAV Username:  your_username
+WebDAV Password:  your_password
+```
+
+> ⚠️ **注意**：
+> - `Target Path` 中的 `xxxxxxxx` 需替换为 CopyLog 实际的应用 UUID（可在 Filza 中查看）
+> - `Bark Path` 中的 `xxxxxxxx` 需替换为 Bark 的 AppGroup UUID
+> - 推荐使用 [InfiniCloud](https://infini-cloud.net/)（Teracloud）、坚果云、Nextcloud 等 WebDAV 服务
 
 ---
 
