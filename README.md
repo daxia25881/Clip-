@@ -1,118 +1,230 @@
-# Clip 魔改版
+# 📋 Clip 魔改版 - iOS 跨设备剪贴板同步
 
-> 基于 [rileytestut/Clip](https://github.com/rileytestut/Clip) 二次开发的 iOS 剪贴板管理器，新增云同步、WebDAV 上传、Bark 推送等实用功能。
+> 基于 [rileytestut/Clip](https://github.com/rileytestut/Clip) 深度改造的 iOS 剪贴板管理器，实现与 PC 端的双向实时剪贴板同步。
 
-[![Swift Version](https://img.shields.io/badge/swift-5.0-orange.svg)](https://swift.org/)
-[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
-[![Platform](https://img.shields.io/badge/platform-iOS%2013+-lightgrey.svg)](https://www.apple.com/ios/)
+[![Swift](https://img.shields.io/badge/Swift-5.0+-orange.svg)](https://swift.org/)
+[![iOS](https://img.shields.io/badge/iOS-13.0+-blue.svg)](https://www.apple.com/ios/)
+[![License](https://img.shields.io/badge/License-Unlicense-green.svg)](./UNLICENSE)
 
-<p align="center">
-<img title="Clip Main Screen" src="https://user-images.githubusercontent.com/705880/63391950-34286600-c37a-11e9-965f-832efe3da507.png" width="320">
-</p>
+## 🎯 项目简介
 
-## ✨ 新增功能
+本项目是一套完整的 **iOS ↔ PC 剪贴板双向同步方案**，通过 WebDAV 作为中转，实现跨设备的剪贴板内容实时同步。
 
-相比原版 Clip，魔改版新增以下功能：
+### 配套项目
 
-| 功能 | 说明 |
-|------|------|
-| 📤 **WebDAV 云同步** | 将剪贴板内容自动上传至 WebDAV 服务器，实现跨设备同步 |
-| 🔔 **Bark 推送通知** | 通过 [Bark](https://github.com/Finb/Bark) 推送剪贴板内容到其他设备 |
-| 📝 **自定义保存路径** | 可自定义剪贴板内容的存储目标路径 |
-| 🔕 **通知开关控制** | 分别控制剪贴板通知和云同步通知的显示 |
+| 端 | 项目 | 说明 |
+|:--:|------|------|
+| � iOS | **Clip 魔改版**（本项目） | 剪贴板监控 + 云同步客户端 |
+| � PC | [HuChuan](https://github.com/daxia25881/huchuan) | Windows/macOS 剪贴板同步工具 |
 
-## 🎯 原版功能
+---
 
-- 🔄 后台静默运行，持续监控剪贴板
-- 📋 保存文本、URL 和图片
-- 🗂 复制、删除、分享剪贴记录
-- 📊 可自定义历史记录数量上限（10/25/50/100条）
-- 📍 位置图标显示开关
+## 🔄 同步架构
 
-## 📱 系统要求
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         WebDAV 服务器                            │
+│                    (坚果云/Nextcloud/Infini)                      │
+│                                                                 │
+│   ┌──────────────────┐         ┌──────────────────┐            │
+│   │ SyncClipboard.json│         │   Bark 通知文件   │            │
+│   │   (剪贴板内容)    │         │   (同步触发信号)  │            │
+│   └────────┬─────────┘         └────────┬─────────┘            │
+└────────────┼───────────────────────────┼───────────────────────┘
+             │                           │
+      ┌──────┴──────┐             ┌──────┴──────┐
+      │   上传/下载  │             │  写入/监听   │
+      └──────┬──────┘             └──────┬──────┘
+             │                           │
+┌────────────┴───────────────────────────┴────────────────────────┐
+│                                                                 │
+│  ┌─────────────────┐                    ┌─────────────────┐     │
+│  │   📱 iOS 端      │                    │   💻 PC 端      │     │
+│  │   Clip 魔改版    │◀──────────────────▶│   HuChuan       │     │
+│  └─────────────────┘                    └─────────────────┘     │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-- iOS 13.0+
-- Xcode 11+
-- Swift 5.0+
+---
 
-## ⚙️ 配置说明
+## � 上传流程（iOS → PC）
 
-打开 App 设置页面，可配置以下选项：
+```
+iOS 复制内容
+     │
+     ▼
+┌─────────────────────────────────────────────────────┐
+│ 1️⃣ Darwin 通知检测到剪贴板变化                        │
+│    (使用私有 Pasteboard.framework)                   │
+└─────────────────────────────────────────────────────┘
+     │
+     ▼
+┌─────────────────────────────────────────────────────┐
+│ 2️⃣ 借助 CopyLog 后台静默获取剪贴板内容                 │
+│    (提取指定文件夹中最新的剪贴板文件)                   │
+└─────────────────────────────────────────────────────┘
+     │
+     ▼
+┌─────────────────────────────────────────────────────┐
+│ 3️⃣ 将内容保存到 Clip 的 SQLite 数据库                 │
+└─────────────────────────────────────────────────────┘
+     │
+     ▼
+┌─────────────────────────────────────────────────────┐
+│ 4️⃣ 上传到 WebDAV 服务器 (SyncClipboard.json)         │
+└─────────────────────────────────────────────────────┘
+     │
+     ▼
+PC 端 HuChuan 检测到云端更新，自动下载并写入本地剪贴板
+```
 
-### 通知配置
-- **剪贴板通知** - 开启/关闭剪贴板变化通知
-- **云同步通知** - 开启/关闭云同步结果通知
+---
 
-### 上传配置
-- **Target Path** - 自定义保存路径
-- **Bark Path** - Bark 推送服务的 API 地址 (例: `https://api.day.app/your-key`)
-- **WebDAV URL** - WebDAV 服务器地址
-- **WebDAV Username** - WebDAV 用户名
-- **WebDAV Password** - WebDAV 密码
+## � 下载流程（PC → iOS）
 
-## 🚀 编译说明
+```
+PC 复制内容
+     │
+     ▼
+┌─────────────────────────────────────────────────────┐
+│ 1️⃣ HuChuan 检测到剪贴板变化，上传到 WebDAV            │
+└─────────────────────────────────────────────────────┘
+     │
+     ▼
+┌─────────────────────────────────────────────────────┐
+│ 2️⃣ HuChuan 发送 Bark 通知 (值为 "1")                 │
+│    作为 iOS 端的同步触发信号                          │
+└─────────────────────────────────────────────────────┘
+     │
+     ▼
+┌─────────────────────────────────────────────────────┐
+│ 3️⃣ iOS 监听 Bark 文件夹的写入事件                     │
+│    检测到新文件，触发同步                             │
+└─────────────────────────────────────────────────────┘
+     │
+     ▼
+┌─────────────────────────────────────────────────────┐
+│ 4️⃣ 从 WebDAV 下载剪贴板内容                          │
+│    保存到 Clip 的 SQLite 数据库                       │
+└─────────────────────────────────────────────────────┘
+     │
+     ▼
+┌─────────────────────────────────────────────────────┐
+│ 5️⃣ 触发本地通知，用户下拉即可将内容保存到剪贴板         │
+│    (利用 ClipboardReader 扩展)                       │
+└─────────────────────────────────────────────────────┘
+```
 
-1. 克隆仓库
-   ```bash
-   git clone https://github.com/daxia25881/Clip-.git
-   ```
+---
 
-2. 更新子模块
-   ```bash
-   cd Clip-
-   git submodule update --init --recursive
-   ```
+## 🛠 技术实现
 
-3. 打开 `Clip.xcodeproj`，在 **Signing & Capabilities** 中更换为你自己的开发者账号
+### 核心模块
 
-4. 编译运行 🎉
+| 模块 | 文件 | 功能 |
+|------|------|------|
+| **剪贴板监控** | `PasteboardMonitor.swift` | 使用 Darwin 通知 + 私有框架监听系统剪贴板变化 |
+| **后台保活** | `ApplicationMonitor.swift` | 播放静音音频保持 App 持续后台运行 |
+| **云同步服务** | `ClipKit/Database/` | WebDAV 上传/下载 + SQLite 存储 |
+| **通知扩展** | `ClipboardReader/` | 下拉通知时读取剪贴板并保存 |
 
-## 📦 安装方式
+### 配置项
 
-- **TrollStore**: 使用 `package_ipa.sh` 脚本打包 IPA 后通过 TrollStore 安装
-- **AltStore**: 通过 AltStore 侧载安装（需每7天重签）
-- **自签名**: 使用开发者证书或企业证书签名
+在设置页面可配置以下参数：
 
-## 📂 项目架构
+| 配置项 | 说明 |
+|--------|------|
+| **Target Path** | CopyLog 剪贴板文件的存储路径 |
+| **Bark Path** | Bark API 地址，用于接收同步触发通知 |
+| **WebDAV URL** | WebDAV 服务器地址 |
+| **WebDAV Username** | WebDAV 账号 |
+| **WebDAV Password** | WebDAV 密码 |
+| **剪贴板通知** | 是否显示剪贴板变化通知 |
+| **云同步通知** | 是否显示云同步结果通知 |
+
+---
+
+## � 安装部署
+
+### 1. 编译 iOS 端
+
+```bash
+# 克隆仓库
+git clone https://github.com/daxia25881/Clip-.git
+cd Clip-
+
+# 更新子模块
+git submodule update --init --recursive
+
+# 用 Xcode 打开，修改签名后编译
+open Clip.xcodeproj
+```
+
+### 2. 打包 IPA
+
+```bash
+chmod +x package_ipa.sh
+./package_ipa.sh
+```
+
+### 3. 安装到 iOS 设备
+
+- **TrollStore**：直接安装打包好的 IPA
+- **AltStore**：侧载安装（需每 7 天重签）
+
+### 4. 部署 PC 端
+
+参考 [HuChuan 项目](https://github.com/daxia25881/huchuan) 部署 PC 端同步工具。
+
+---
+
+## 📂 项目结构
 
 ```
 Clip/
-├── Clip/                 # 主应用
-│   ├── Settings/         # 设置页面（含魔改版新增配置项）
-│   ├── History/          # 历史记录页面
-│   ├── Pasteboard/       # 剪贴板监控
-│   └── ApplicationMonitor.swift  # 后台保活
-├── ClipKit/              # 共享框架
-│   ├── Database/         # Core Data 数据模型
-│   └── Extensions/       # 扩展（含 UserDefaults 配置项）
-├── ClipboardReader/      # 通知内容扩展
-├── ClipBoard/            # 自定义键盘扩展
-└── Dependencies/         # 依赖库（Roxas 等）
+├── Clip/                     # 主应用
+│   ├── ApplicationMonitor    # 后台保活
+│   ├── Pasteboard/           # 剪贴板监控
+│   ├── Settings/             # 设置页面（云同步配置）
+│   └── History/              # 历史记录
+├── ClipKit/                  # 共享框架
+│   ├── Database/             # SQLite + Core Data
+│   └── Extensions/           # UserDefaults 扩展
+├── ClipboardReader/          # 通知内容扩展
+├── ClipBoard/                # 自定义键盘
+└── Dependencies/             # 依赖库 (Roxas)
 ```
 
-## 🔧 工作原理
+---
 
-### 后台保活
-通过播放静音音频保持 App 在后台持续运行，绕过 iOS 后台限制。
+## � 系统要求
 
-### 剪贴板监控
-使用 Darwin 通知 + 私有 `Pasteboard.framework` 实现系统级剪贴板变化监听。
+| 要求 | 版本 |
+|------|------|
+| iOS | 13.0+ |
+| Xcode | 11+ |
+| Swift | 5.0+ |
+| WebDAV | 任意支持 WebDAV 的服务 |
 
-### 云同步
-检测到剪贴板变化后，自动通过 WebDAV 协议上传内容到指定服务器。
+---
 
-## 📜 开源协议
+## � 相关项目
 
-本项目基于 [Unlicense](UNLICENSE) 协议开源，你可以自由使用、修改和分发。
+- [rileytestut/Clip](https://github.com/rileytestut/Clip) - 原版 Clip
+- [HuChuan](https://github.com/daxia25881/huchuan) - PC 端同步工具
+- [Roxas](https://github.com/rileytestut/roxas) - iOS 工具框架
+- [Bark](https://github.com/Finb/Bark) - iOS 推送服务
+- [SyncClipboard](https://github.com/Jeric-X/SyncClipboard) - 兼容协议
 
-## 🙏 致谢
+---
 
-- [rileytestut/Clip](https://github.com/rileytestut/Clip) - 原版 Clip 项目
-- [rileytestut/Roxas](https://github.com/rileytestut/roxas) - iOS 工具框架
-- [Finb/Bark](https://github.com/Finb/Bark) - iOS 推送服务
+## 📜 许可证
+
+本项目基于 [Unlicense](./UNLICENSE) 协议开源，可自由使用、修改和分发。
 
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/daxia25881">daxia25881</a>
+  <b>Made with ❤️ by <a href="https://github.com/daxia25881">daxia25881</a></b>
 </p>
