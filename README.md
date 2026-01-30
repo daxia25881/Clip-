@@ -3,7 +3,8 @@
 > 基于 [rileytestut/Clip](https://github.com/rileytestut/Clip) 深度改造的 iOS 剪贴板管理器，实现与 PC 端的双向实时剪贴板同步。
 
 [![Swift](https://img.shields.io/badge/Swift-5.0+-orange.svg)](https://swift.org/)
-[![iOS](https://img.shields.io/badge/iOS-13.0+-blue.svg)](https://www.apple.com/ios/)
+[![iOS](https://img.shields.io/badge/iOS-13.0--17.0-blue.svg)](https://www.apple.com/ios/)
+[![TrollStore](https://img.shields.io/badge/TrollStore-Required-red.svg)](https://github.com/opa334/TrollStore)
 [![License](https://img.shields.io/badge/License-Unlicense-green.svg)](./UNLICENSE)
 
 ## 🎯 项目简介
@@ -145,7 +146,25 @@ PC 复制内容
 
 ---
 
-## � 安装部署
+## ⚠️ 前置要求
+
+> **重要**：本项目需要 **iOS 17.0 及以下** 版本，必须支持安装 [TrollStore](https://github.com/opa334/TrollStore)（巨魔商店）。
+
+### 必需依赖
+
+在使用本项目前，请确保已安装以下应用：
+
+| 应用 | 说明 | 下载地址 |
+|------|------|----------|
+| **TrollStore** | 巨魔商店，用于安装免签 IPA | [GitHub](https://github.com/opa334/TrollStore) |
+| **Bark** | iOS 推送服务，接收 PC 端同步触发通知 | [App Store](https://apps.apple.com/app/bark-customed-notifications/id1403753865) / [GitHub](https://github.com/Finb/Bark) |
+| **CopyLog** | 后台剪贴板读取工具，用于静默获取剪贴板内容 | TrollStore 安装 |
+
+> 💡 **提示**：CopyLog 可在后台静默读取剪贴板内容并保存到指定文件夹，Clip 通过读取该文件夹获取最新剪贴板内容。
+
+---
+
+## 📦 安装部署
 
 ### 1. 编译 iOS 端
 
